@@ -1,0 +1,10 @@
+setup.py
+src/__init__.py
+src/doc_analyser/__init__.py
+src/doc_compare/__init__.py
+src/document_portal.egg-info/PKG-INFO
+src/document_portal.egg-info/SOURCES.txt
+src/document_portal.egg-info/dependency_links.txt
+src/document_portal.egg-info/top_level.txt
+src/multi_doc_chat/__init__.py
+src/single_doc_chat/__init__.py
