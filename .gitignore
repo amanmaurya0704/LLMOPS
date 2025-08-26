@@ -5,3 +5,4 @@ logs
 
 __pycache__
 document_portal.egg-info
+dev.nix
