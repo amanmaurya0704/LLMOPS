@@ -4,3 +4,4 @@ env
 logs
 
 __pycache__
+document_portal.egg-info
