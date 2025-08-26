@@ -1,2 +1,6 @@
 venvllops
 .env
+env
+logs
+
+__pycache__
