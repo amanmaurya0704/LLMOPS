@@ -4,5 +4,6 @@ env
 logs
 
 __pycache__
-document_portal.egg-info
+Document_portal/src/document_portal.egg-info/
 dev.nix
+.idx
