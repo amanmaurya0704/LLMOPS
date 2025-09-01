@@ -1,8 +1,8 @@
 setup.py
 src/__init__.py
 src/doc_analyser/__init__.py
-src/doc_analyser/analysis.py
-src/doc_analyser/dataingestion.py
+src/doc_analyser/data_analysis.py
+src/doc_analyser/data_ingestion.py
 src/doc_compare/__init__.py
 src/doc_compare/dataingestion.py
 src/doc_compare/retrieval.py

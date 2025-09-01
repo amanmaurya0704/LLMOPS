@@ -32,7 +32,7 @@ class ModelLoader:
             model_name = self.config["embedding_model"]["model_name"]
             return GoogleGenerativeAIEmbeddings(model = model_name)
         except:
-            log.error("Error in loading embedding model",error = str(e))
+            log.error("Error in loading embedding model")
             raise Document_Portal_Exception("Failed to load embedding model",sys)
 
     def load_llm(self):
