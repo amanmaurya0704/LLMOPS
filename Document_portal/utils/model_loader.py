@@ -1,11 +1,12 @@
 import os
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 import json
 from dotenv import load_dotenv
 from config_loader import load_config
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from logger.custom_logging import CustomLogger
 from exception.custom_exception import Document_Portal_Exception
 
