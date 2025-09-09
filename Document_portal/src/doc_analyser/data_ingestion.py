@@ -26,20 +26,38 @@ class DocumentHandler:
             self.log.error(f"Error in initalising PDF Handler: {e}")
             raise Document_Portal_Exception("Error in intialising PDF Handler",sys)
 
-    def save_pdf(self):
+    def save_pdf(self,uploaded_file):
         try:
-            pass
+            file_name = os.path.basename(uploaded_file.name)
+            if not file_name.lower().endswith(".pdf"):
+                raise Document_Portal_Exception("Invalid file type. Only PDF files are allowed.")
+
+            save_path = os.path.join(self.session_path, file_name)
+            with open(save_path, "wb") as f:
+                f.write(uploaded_file.read())
+                
+            self.log.info("PDF saved successfully",pdf_path = save_path,session_id = self.session_id)
+            return save_path
+            
         except Exception as e:
             self.log.error(f"Error in saving PDF: {e}")
             raise Document_Portal_Exception("Error in saving PDF",sys)
 
-    def read_pdf(self):
+    def read_pdf(self,pdf_path:str)->str:
         try:
-            pass
+            text_chunk = []
+            with fitz.open(pdf_path) as doc:
+                for page_num, page in enumaerate(doc,start = 1):
+                    text_chunks.append(f"\n ----Page {page_num} ----\n {page.get_text()}")
+            text = "\n".join(text_chunks)
+            
+            self.log.info("PDF read successfully",pdf_path = pdf_path,session_id = self.session_id,pages = len(text_chuncks))
+            return " ".join(text_chunk)
         except Exception as e:
             self.log.error(f"Error in reading PDF: {e}")
             raise Document_Portal_Exception("Error in reading PDF",sys)
 
 if __name__ == "__main__":
+    
     handler = DocumentHandler()
     
