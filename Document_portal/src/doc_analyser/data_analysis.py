@@ -1,14 +1,13 @@
 import os
 import sys
-sys.path.insert(0, 'C:\\Users\\amanm\\Downloads\\Machine Learning\\LLMOPS\\Document_portal')
 from utils.model_loader import ModelLoader
 from logger.custom_logging import CustomLogger
 from exception.custom_exception import Document_Portal_Exception
 from model.models import *
-from langchain.output_parsers import JsonOutputToolsParser
+from langchain.output_parsers import PydanticOutputParser
 from langchain.output_parsers import OutputFixingParser
 import sys
-from prompt import *
+from prompt.prompt_library import *
 
 class DocumentAnalyser:
     def __init__(self):
@@ -17,7 +16,7 @@ class DocumentAnalyser:
             self.loader = ModelLoader()
             self.llm = self.loader.load_llm()
 
-            self.parser = JsonOutputToolsParser(pydantic_object = MetaData)
+            self.parser = PydanticOutputParser(pydantic_object = MetaData)
             self.fixing_parser = OutputFixingParser.from_llm(parser=self.parser, llm=self.llm)
 
             self.prompt = prompt
@@ -25,11 +24,11 @@ class DocumentAnalyser:
             self.log.info("Document Analyser Initialised")
 
 
-        except:
+        except Exception as e:
             self.log.error(f"Error in initalising Document Analyzer: {e}")
             raise Document_Portal_Exception("Error in intialising Analyser",sys)
 
-    def analyse_metadata(self, document_text:str)->dict:
+    def analyse_document(self, document_text:str)->dict:
         """
         Analyse the document's text and extract structured meta data and summary.
         """
@@ -43,11 +42,11 @@ class DocumentAnalyser:
                 "document_text": document_text
             })
 
-            self.log.info("meta data extraction successful", keys = list(response.keys))
+            self.log.info("meta data extraction successful", keys = list(response.model_dump().keys()))
 
-            return response
+            return response.model_dump()
 
-        except:
+        except Exception as e:
             self.log.error(f"Error in analysing metadata: {e}")
             raise Document_Portal_Exception("Error in analysing metadata",sys)
 
