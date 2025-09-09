@@ -1,8 +1,6 @@
 import sys
 import traceback
 import os.path
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from logger.custom_logging import CustomLogger
 logger  = CustomLogger()
 logger=logger.get_logger(__file__)

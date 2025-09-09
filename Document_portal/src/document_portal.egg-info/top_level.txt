@@ -1,4 +1,3 @@
-__init__
 doc_analyser
 doc_compare
 multi_doc_chat

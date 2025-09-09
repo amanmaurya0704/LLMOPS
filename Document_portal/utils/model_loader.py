@@ -1,12 +1,18 @@
 import os
+import sys
+from pathlib import Path
+
+# Add the src and utils directory to the Python path
+utils_path = Path(__file__).parent
+src_path = utils_path.parent / "src"
+sys.path.insert(0, str(src_path))
+sys.path.insert(0, str(utils_path))
 
 import json
 from dotenv import load_dotenv
 from config_loader import load_config
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from logger.custom_logging import CustomLogger
 from exception.custom_exception import Document_Portal_Exception
 
