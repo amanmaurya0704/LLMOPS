@@ -6,8 +6,7 @@ from exception.custom_exception import Document_Portal_Exception
 from model.models import *
 from langchain.output_parsers import PydanticOutputParser
 from langchain.output_parsers import OutputFixingParser
-import sys
-from prompt.prompt_library import *
+from prompt.prompt_library import PROMPT_REGISTRY
 
 class DocumentAnalyser:
     def __init__(self):
@@ -19,7 +18,7 @@ class DocumentAnalyser:
             self.parser = PydanticOutputParser(pydantic_object = MetaData)
             self.fixing_parser = OutputFixingParser.from_llm(parser=self.parser, llm=self.llm)
 
-            self.prompt = prompt
+            self.prompt = PROMPT_REGISTRY["document_analysis"]
 
             self.log.info("Document Analyser Initialised")
 
