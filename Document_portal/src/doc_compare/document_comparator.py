@@ -6,11 +6,11 @@ from exception.custom_exception import Document_Portal_Exception
 from model.models import *
 from prompt.prompt_library import PROMPT_REGISTRY
 from utils.model_loader import ModelLoader
-from langchain.output_parsers import JsonOutputParser
+from langchain_core.output_parsers import JsonOutputParser
 from langchain.output_parsers import OutputFixingParser
 
 
-class DocumentComparator:
+class DocumentComparatorLLM:
     def __init__(self):
         load_dotenv()
         self.log = CustomLogger().get_logger(__name__)
@@ -18,13 +18,13 @@ class DocumentComparator:
         self.llm = self.loader.load_llm()
         self.parser = JsonOutputParser(pydantic_object=SummaryResponse)
         self.fix_parser = OutputFixingParser.from_llm(parser=self.parser, llm=self.llm)
-        self.prompt = PROMPT_REGISTRY["document_comparison"]
-        self.chain = self.prompt | self.llm | self.fix_parser
+        self.prompt = PROMPT_REGISTRY["document_comparision"]
+        self.chain = self.prompt | self.llm #| self.fix_parser
 
     def compare_documents(self, combined_docs : str)-> pd.DataFrame:
         try:
             inputs = {
-                "combined_docs" combined_doc,
+                "combined_docs": combined_docs,
                 "format_instruction" : self.parser.get_format_instructions()
             }
 

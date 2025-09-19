@@ -17,7 +17,8 @@ class ChangeFormat(BaseModel):
     Page: str
     changes: str
 
-class SummaryResponse():
+
+class SummaryResponse(RootModel[list[ChangeFormat]]):
     pass
 
 
