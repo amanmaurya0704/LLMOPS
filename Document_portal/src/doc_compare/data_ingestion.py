@@ -26,6 +26,8 @@ class DocumentIngestion:
             self.delete_existing_files()
             self.log.info("Existing file deleted successfully.")
 
+            self.base_dir.mkdir(parents=True, exist_ok=True)
+
             ref_path = self.base_dir/reference_file.name
             act_path = self.base_dir/actual_file.name
 
@@ -69,7 +71,16 @@ class DocumentIngestion:
             
     def clean_old_sessions(self):
         try:
-            pass
+            session_folder = sorted(
+                [f for f in self.base_dir.iterdir() if f.is_dir()],
+                reverse = True
+            )
+            for folder in session_folder[keep_latest:]:
+                for file in folder.iterdir():
+                    file.unlink()
+                folder.rmkdir():
+                self.log.info("Old sessions cleaned successfully", path = str(folder)
+                )
         except Exception as e:
             self.log.error(f"Error in cleaning old sessions: {e}")
             raise Document_Portal_Exception("Error in cleaning old sessions",sys)
@@ -78,7 +89,7 @@ class DocumentIngestion:
         try:
             with fitz.open(pdf_path) as doc:
                 if doc.is_encrypted:
-                    raise ValueError("PDF is encrypted: {pdf_path.name}")
+                    raise ValueError(f"PDF is encrypted: {pdf_path.name}")
                 all_text = []
                 for page_num in range(doc.page_count):
                     page = doc.load_page(page_num)
@@ -90,4 +101,3 @@ class DocumentIngestion:
         except Exception as e:
             self.log.error(f"Error in reading pdf: {e}")
             raise Document_Portal_Exception("Error in reading pdf",sys)
-
