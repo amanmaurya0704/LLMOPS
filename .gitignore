@@ -7,3 +7,5 @@ Document_portal/src/document_portal.egg-info/
 dev.nix
 .idx
 venvllmops
+faiss_index
+data
