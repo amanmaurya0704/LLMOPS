@@ -78,7 +78,7 @@ class DocumentIngestion:
             for folder in session_folder[keep_latest:]:
                 for file in folder.iterdir():
                     file.unlink()
-                folder.rmkdir():
+                folder.rmkdir()
                 self.log.info("Old sessions cleaned successfully", path = str(folder)
                 )
         except Exception as e:
