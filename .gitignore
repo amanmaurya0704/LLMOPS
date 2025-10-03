@@ -9,3 +9,4 @@ dev.nix
 venvllmops
 faiss_index
 data
+archive
