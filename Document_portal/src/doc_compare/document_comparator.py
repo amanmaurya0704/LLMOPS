@@ -18,8 +18,9 @@ class DocumentComparatorLLM:
         self.llm = self.loader.load_llm()
         self.parser = JsonOutputParser(pydantic_object=SummaryResponse)
         self.fix_parser = OutputFixingParser.from_llm(parser=self.parser, llm=self.llm)
-        self.prompt = PROMPT_REGISTRY["document_comparision"]
-        self.chain = self.prompt | self.llm #| self.fix_parser
+        self.prompt = PROMPT_REGISTRY[PromptType.DOCUMENT_COMPARISON.value]
+        self.chain = self.prompt | self.llm | self.parser
+        self.log.info("DocumentComparatorLLM initialized", model=self.llm)
 
     def compare_documents(self, combined_docs : str)-> pd.DataFrame:
         try:

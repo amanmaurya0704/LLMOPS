@@ -13,7 +13,7 @@ from logger.custom_logging import CustomLogger
 from exception.custom_exception import Document_Portal_Exception
 from prompt.prompt_library import PROMPT_REGISTRY
 from model.models import PromptType
-from typing import List, Optional
+from typing import List, Optional, Dict,Any
 
 
 class ConversationalRAG:
@@ -24,32 +24,61 @@ class ConversationalRAG:
             self.llm = self._load_llm()
             self.contextualize_prompt : ChatPromptTemplate = PROMPT_REGISTRY[PromptType.CONTEXTUALIZE_QUESTION.value]
             self.qa_prompt : ChatPromptTemplate = PROMPT_REGISTRY[PromptType.CONTEXT_QA.value]
-
-            if retriever is None:
-                raise ValueError("Retriever cannot be None")
             self.retriever = retriever
-            self._build_lcel_chain()
+            self.chain = None
+            if self.retriever is not None:
+                self._build_lcel_chain()
             self.log.info("Intialised Conversational RAG",session_id = session_id)
 
         except Exception as e:
-            self.log.error("Failed to initalise ConverationRAG",error = str(e))
+            self.log.error("Failed to initalise Converational RAG",error = str(e))
             raise Document_Portal_Exception("Initialisation error in coverationRAG", sys)
 
         
 
-    def load_retriever_from_faiss(self):
+    def load_retriever_from_faiss(self,
+        index_path: str,
+        k: int = 5,
+        index_name: str = "index",
+        search_type: str = "similarity",
+        search_kwargs: Optional[Dict[str, Any]] = None,):
         """
         Load a FAISS
         """
-        embeddings = ModelLoader().load_embeddings()
-        if not os.path.isdir(index_path):
-            raise FileNotFoundError("FAISS index directory not found {indexpath}")
+        try:
+            if not os.path.isdir(index_path):
+                raise FileNotFoundError(f"FAISS index directory not found: {index_path}")
 
-        vectorstore = FAISS.load_local(index_path,embeddings,allow_danger_deserialisation=True)
-        self.retriever = vectorstore.as_retriever(search_type = "similarity", search_kwags ={"k":5})
-        self._build_lcel_chain()
-        self.log.info("Loaded retriever from FAISS index",index_path = index_path)
-        return self.retriever
+            embeddings = ModelLoader().load_embedding()
+            vectorstore = FAISS.load_local(
+                index_path,
+                embeddings,
+                index_name=index_name,
+                allow_dangerous_deserialization=True,  # ok if you trust the index
+            )
+
+            if search_kwargs is None:
+                search_kwargs = {"k": k}
+
+            self.retriever = vectorstore.as_retriever(
+                search_type=search_type, search_kwargs=search_kwargs
+            )
+            self._build_lcel_chain()
+
+            self.log.info(
+                "FAISS retriever loaded successfully",
+                index_path=index_path,
+                index_name=index_name,
+                k=k,
+                session_id=self.session_id,
+            )
+            return self.retriever
+
+        except Exception as e:
+            self.log.error("Failed to invoke ConversationalRAG", error=str(e))
+            raise Document_Portal_Exception("Invocation error in ConversationalRAG", sys)
+
+
     def invoke(self, user_input:str, chat_history:Optional[List[BaseMessage]] =None )->str:
         try:
             chat_history = chat_history or []

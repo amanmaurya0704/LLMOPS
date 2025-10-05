@@ -8,35 +8,41 @@ import shutil
 from pathlib import Path
 from typing import Iterable, List, Optional, Dict, Any
 import fitz  # PyMuPDF
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from langchain.schema import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from utils.model_loader import ModelLoader
 from logger import GLOBAL_LOGGER as log
-from exception.custom_exception import DocumentPortalException
+from exception.custom_exception import Document_Portal_Exception
+
+from utils.file_io import _session_id, save_uploaded_files
+from utils.document_ops import load_documents, concat_for_analysis, concat_for_comparison
 
 SUPPORTED_EXTENSION = {".pdf", ".docx", ".txt"}
 
 
 
 class FaissManager:
-    def __init__(self, index_dir: Path, model_loader = Optional[ModelLoader]=None):
+    def __init__(self, index_dir: Path, model_loader : Optional[ModelLoader]=None):
         self.index_dir = Path(index_dir)
         self.index_dir.mkdir(parents=True, exist_ok=True)
 
         self.meta_path = self.index_dir / "ingested_meta.json"
-        self._meta = Dict[str,Any] = {"rows",{}}
+        self._meta: Dict[str, Any] = {"rows": {}}
 
         if self.meta_path.exists():
             try:
-                self._meta = json.loads(self.meta_path.read_test(encoding = "utf-8") or {"rows":{}})
+                self._meta = json.loads(self.meta_path.read_text(encoding="utf-8")) or {"rows": {}}
             except Exception:
                 self._meta = {"rows":{}}
        
 
         self.model_loader = model_loader or ModelLoader()
-        self.emb = self.model_loader.load_embeddings()
+        self.emb = self.model_loader.load_embedding()
         self.vs: Optional[FAISS] = None
     
     def _exists(self):
@@ -85,7 +91,7 @@ class FaissManager:
         
         
         if not texts:
-            raise DocumentPortalException("No existing FAISS index and no data to create one", sys)
+            raise Document_Portal_Exception("No existing FAISS index and no data to create one", sys)
         self.vs = FAISS.from_texts(texts=texts, embedding=self.emb, metadatas=metadatas or [])
         self.vs.save_local(str(self.index_dir))
         return self.vs
@@ -96,7 +102,7 @@ class DocHandler:
     """
     def __init__(self, data_dir: Optional[str] = None, session_id: Optional[str] = None):
         self.data_dir = data_dir or os.getenv("DATA_STORAGE_PATH", os.path.join(os.getcwd(), "data", "document_analysis"))
-        self.session_id = session_id or generate_session_id("session")
+        self.session_id = session_id or _session_id("session")
         self.session_path = os.path.join(self.data_dir, self.session_id)
         os.makedirs(self.session_path, exist_ok=True)
         log.info("DocHandler initialized", session_id=self.session_id, session_path=self.session_path)
@@ -116,7 +122,7 @@ class DocHandler:
             return save_path
         except Exception as e:
             log.error("Failed to save PDF", error=str(e), session_id=self.session_id)
-            raise DocumentPortalException(f"Failed to save PDF: {str(e)}", e) from e
+            raise Document_Portal_Exception(f"Failed to save PDF: {str(e)}", e) from e
 
     def read_pdf(self, pdf_path: str) -> str:
         try:
@@ -130,7 +136,7 @@ class DocHandler:
             return text
         except Exception as e:
             log.error("Failed to read PDF", error=str(e), pdf_path=pdf_path, session_id=self.session_id)
-            raise DocumentPortalException(f"Could not process PDF: {pdf_path}", e) from e
+            raise Document_Portal_Exception(f"Could not process PDF: {pdf_path}", e) from e
 
 class DocumentComparator:
     """
@@ -138,7 +144,7 @@ class DocumentComparator:
     """
     def __init__(self, base_dir: str = "data/document_compare", session_id: Optional[str] = None):
         self.base_dir = Path(base_dir)
-        self.session_id = session_id or generate_session_id()
+        self.session_id = session_id or _session_id("session")
         self.session_path = self.base_dir / self.session_id
         self.session_path.mkdir(parents=True, exist_ok=True)
         log.info("DocumentComparator initialized", session_path=str(self.session_path))
@@ -159,7 +165,7 @@ class DocumentComparator:
             return ref_path, act_path
         except Exception as e:
             log.error("Error saving PDF files", error=str(e), session=self.session_id)
-            raise DocumentPortalException("Error saving files", e) from e
+            raise Document_Portal_Exception("Error saving files", e) from e
 
     def read_pdf(self, pdf_path: Path) -> str:
         try:
@@ -176,7 +182,7 @@ class DocumentComparator:
             return "\n".join(parts)
         except Exception as e:
             log.error("Error reading PDF", file=str(pdf_path), error=str(e))
-            raise DocumentPortalException("Error reading PDF", e) from e
+            raise Document_Portal_Exception("Error reading PDF", e) from e
 
     def combine_documents(self) -> str:
         try:
@@ -190,7 +196,7 @@ class DocumentComparator:
             return combined_text
         except Exception as e:
             log.error("Error combining documents", error=str(e), session=self.session_id)
-            raise DocumentPortalException("Error combining documents", e) from e
+            raise Document_Portal_Exception("Error combining documents", e) from e
 
     def clean_old_sessions(self, keep_latest: int = 3):
         try:
@@ -200,7 +206,7 @@ class DocumentComparator:
                 log.info("Old session folder deleted", path=str(folder))
         except Exception as e:
             log.error("Error cleaning old sessions", error=str(e))
-            raise DocumentPortalException("Error cleaning old sessions", e) from e
+            raise Document_Portal_Exception("Error cleaning old sessions", e) from e
         
 
 class ChatIngestor:
@@ -214,7 +220,7 @@ class ChatIngestor:
             self.model_loader = ModelLoader()
             
             self.use_session = use_session_dirs
-            self.session_id = session_id or generate_session_id()
+            self.session_id = session_id or _session_id("session")
             
             self.temp_base = Path(temp_base); self.temp_base.mkdir(parents=True, exist_ok=True)
             self.faiss_base = Path(faiss_base); self.faiss_base.mkdir(parents=True, exist_ok=True)
@@ -229,7 +235,7 @@ class ChatIngestor:
                       sessionized=self.use_session)
         except Exception as e:
             log.error("Failed to initialize ChatIngestor", error=str(e))
-            raise DocumentPortalException("Initialization error in ChatIngestor", e) from e
+            raise Document_Portal_Exception("Initialization error in ChatIngestor", e) from e
             
         
     def _resolve_dir(self, base: Path):
@@ -277,4 +283,4 @@ class ChatIngestor:
             
         except Exception as e:
             log.error("Failed to build retriever", error=str(e))
-            raise DocumentPortalException("Failed to build retriever", e) from e
+            raise Document_Portal_Exception("Failed to build retriever", e) from e
