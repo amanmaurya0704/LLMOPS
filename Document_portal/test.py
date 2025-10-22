@@ -46,6 +46,7 @@
 #         print(f"Test failed: {e}")
 
 
+
 # if __name__ == "__main__":
 #     main()
 
@@ -148,6 +149,7 @@
 #     test_conversational_rag_on_pdf(pdf_path, question)
 
 ## testing for multidoc chat
+import pandas as pd
 import sys
 from pathlib import Path
 from src.multi_doc_chat.dataingestion import DocumentIngestor
